@@ -138,10 +138,10 @@ async def process_q(callback: CallbackQuery, state: FSMContext, bot: Bot):
                     reply_markup=start_kb)
             except Exception as err:
                 print('Произошла ошибка при отправке работы.'
-                      ' Сообщите администратору')
+                      ' Сообщите администратору', err)
                 await callback.message.answer(
-                    f'Произошла ошибка при отправке работы.'
-                    f' Сообщите администратору',
+                    'Произошла ошибка при отправке работы.'
+                    ' Сообщите администратору',
                     reply_markup=start_kb)
         else:
             await callback.message.answer(

@@ -91,7 +91,8 @@ async def update_price(message: Message, state: FSMContext, bot: Bot):
         print('msg_id', message_id)
         worker_tg_id, work = db_update_price(work_id, price)
         # Удалить сообщение
-        await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
+        await bot.delete_message(chat_id=message.chat.id,
+                                 message_id=message_id)
         await state.clear()
         await message.answer(f'Стоимость обновлена\n\n{work}')
         work_user_tg_id = get_tg_id_from_work_id(work_id)

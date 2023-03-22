@@ -66,9 +66,12 @@ def get_test_work():
         return work
 
 
-print('-----------')
-print('Достаем работу')
-w = get_test_work()
-print(w)
-print(type(w))
-print(w)
+# print('-----------')
+# print('Достаем работу')
+# w = get_test_work()
+# print(w)
+# print(type(w))
+# print(w)
+#
+
+# get_works_on_period()

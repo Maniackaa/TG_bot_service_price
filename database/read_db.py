@@ -73,6 +73,34 @@ def get_tg_id_from_work_id(work_id):
             return None
         return work.user.tg_id
 
+
+def get_works_on_period(start_date=None, end_date=None):
+    """Получение всех работ"""
+    try:
+        with Session(engine) as session:
+            works = session.query(Work).order_by(Work.id)
+            all_work = 'Все работы :\n\n'
+            sum_price = 0
+            for work in works:
+                all_work += (
+                    f'Авто: {work.auto}\n'
+                    f'Работа {work.id}: {work.name}\n'
+                    f'Оценка: {work.price}\n\n')
+                print(f'Авто: {work.auto}\n'
+                      f'Работа {work.id}: {work.name}\n'
+                      f'Оценка: {work.price}\n')
+                if work.price:
+                    sum_price += work.price
+            all_work += f'Итоговая сумма: {sum_price}'
+            print(all_work)
+
+            return all_work
+    except Exception as err:
+        print('Не получилось')
+        print(err)
+        raise err
+    return work
+
 # w = get_work_from_id(2)
 # print(w)
 

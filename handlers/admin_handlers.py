@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, Message
 
 from config_data.config import config
 from database.read_db import get_null_price_work_ids, get_work_from_id, \
-    get_tg_id_from_work_id
+    get_tg_id_from_work_id, get_works_on_period
 from database.write_db import db_update_price
 from keyboards.keyboards import get_cost_kb, admin_start_kb
 
@@ -101,3 +101,15 @@ async def update_price(message: Message, state: FSMContext, bot: Bot):
     else:
         await message.answer(
             f'Вам необходимо ввести число для работы № {work_id}')
+
+
+# Показать все работы
+@admin_router.message(Command(commands=["Все_работы"]))
+async def process_show_work_command(message: Message):
+    text = get_works_on_period()
+    print(len(text))
+    if len(text) > 4096:
+        for x in range(0, len(text), 4096):
+            await message.answer(text[x:x + 4096])
+    else:
+        await message.answer(text)

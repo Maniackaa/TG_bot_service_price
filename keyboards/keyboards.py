@@ -11,6 +11,7 @@ start_kb: ReplyKeyboardMarkup = ReplyKeyboardMarkup(keyboard=kb,
                                                     resize_keyboard=True)
 admin_kb = [
     [KeyboardButton(text="/Прислать_пустые")],
+    [KeyboardButton(text="/Все_работы")],
     [KeyboardButton(text="/Отмена")]
     ]
 admin_start_kb = ReplyKeyboardMarkup(keyboard=admin_kb,

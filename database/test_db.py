@@ -74,4 +74,14 @@ def get_test_work():
 # print(w)
 #
 
-# get_works_on_period()
+
+def get_works_on_period(start_date=None, end_date=None):
+    """Получение всех работ"""
+
+    with Session(engine) as session:
+        work = session.query(Work).order_by(Work.id).first()
+        print(work)
+
+    return work
+
+get_works_on_period()

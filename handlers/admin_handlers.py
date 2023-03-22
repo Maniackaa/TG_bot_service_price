@@ -1,3 +1,5 @@
+import datetime
+
 from aiogram import Router, Bot
 from aiogram.filters import Command, StateFilter, Text, BaseFilter
 from aiogram.fsm.context import FSMContext
@@ -39,6 +41,7 @@ async def process_cancel_command(message: Message):
                          reply_markup=admin_start_kb)
 
 
+# Прислать пустые работы
 @admin_router.message(Command(commands=["Прислать_пустые"]))
 async def process_start_command_admin(message: Message):
     null_price_work = get_null_price_work_ids()
@@ -108,6 +111,39 @@ async def update_price(message: Message, state: FSMContext, bot: Bot):
 async def process_show_work_command(message: Message):
     text = get_works_on_period()
     print(len(text))
+    if len(text) > 4096:
+        for x in range(0, len(text), 4096):
+            await message.answer(text[x:x + 4096])
+    else:
+        await message.answer(text)
+
+
+# Работы_за_этот_месяц
+@admin_router.message(Command(commands=["Работы_за_этот_месяц"]))
+async def process_show_work_command(message: Message):
+    date_now = datetime.datetime.now()
+    year = date_now.year
+    month = date_now.month
+    start = datetime.datetime(year, month, 1)
+    correction = datetime.timedelta(milliseconds=1)
+    end = datetime.datetime(year, month + 1, 1) - correction
+    text = get_works_on_period(start_date=start, end_date=end)
+    if len(text) > 4096:
+        for x in range(0, len(text), 4096):
+            await message.answer(text[x:x + 4096])
+    else:
+        await message.answer(text)
+
+# Работы_за_прошлый_месяц
+@admin_router.message(Command(commands=["Работы_за_прошлый_месяц"]))
+async def process_show_work_command(message: Message):
+    date_now = datetime.datetime.now()
+    year = date_now.year
+    month = date_now.month
+    start = datetime.datetime(year, month - 1, 1)
+    correction = datetime.timedelta(milliseconds=1)
+    end = datetime.datetime(year, month, 1) - correction
+    text = get_works_on_period(start_date=start, end_date=end)
     if len(text) > 4096:
         for x in range(0, len(text), 4096):
             await message.answer(text[x:x + 4096])

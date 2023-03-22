@@ -1,3 +1,6 @@
+from collections import Counter
+from datetime import timedelta, datetime
+
 from database.db import engine, User, Work
 from sqlalchemy.orm import Session
 
@@ -74,25 +77,55 @@ def get_tg_id_from_work_id(work_id):
         return work.user.tg_id
 
 
-def get_works_on_period(start_date=None, end_date=None):
+def get_report(works: list[Work]):
+    price_counter = Counter()
+    num_counter = Counter()
+    uncost_counter = Counter()
+    total_counter = Counter()
+    users = set()
+    for work in works:
+        num_counter.update({work.user: 1})
+        total_counter.update({'total_sum': work.price or 0})
+        if work.price:
+            price_counter.update({work.user: work.price or 0})
+        else:
+            uncost_counter.update({work.user: 1})
+        users.add(work.user)
+    print(price_counter)
+    print(num_counter)
+    print(uncost_counter)
+    print(users)
+    report = '\n<b>Сводный итог:</b>\n\n'
+    for user in users:
+        report += (f'{user}\n'
+                   f'Всего работ: {num_counter.get(user)}\n'
+                   f'Общая сумма: {price_counter.get(user)}\n'
+                   f'Работ без оценки: {uncost_counter.get(user) or 0}\n\n')
+    report += f'Итоговая сумма: {total_counter.get("total_sum")}'
+    return report
+
+
+
+def get_works_on_period(start_date=datetime(2023, 1, 1), end_date=datetime.now()):
     """Получение всех работ"""
     try:
         with Session(engine) as session:
-            works = session.query(Work).order_by(Work.id)
-            all_work = 'Все работы :\n\n'
+            works = session.query(Work).order_by(Work.id).filter(Work.datetime <= end_date, Work.datetime > start_date).all()
+            all_work = f'<b>Все работы за\n{start_date.strftime("%d %B %Y")} - {end_date.strftime("%d %B %Y")}:</b>\n\n'
             sum_price = 0
             for work in works:
                 all_work += (
                     f'Авто: {work.auto}\n'
                     f'Работа {work.id}: {work.name}\n'
                     f'Оценка: {work.price}\n\n')
-                print(f'Авто: {work.auto}\n'
-                      f'Работа {work.id}: {work.name}\n'
-                      f'Оценка: {work.price}\n')
+                # print(f'Авто: {work.auto}\n'
+                #       f'Работа {work.id}: {work.name}\n'
+                #       f'Оценка: {work.price}\n')
                 if work.price:
                     sum_price += work.price
-            all_work += f'Итоговая сумма: {sum_price}'
-            print(all_work)
+            all_work += get_report(works)
+            # print(all_work)
+            print('Всего', len(works))
 
             return all_work
     except Exception as err:
@@ -101,8 +134,13 @@ def get_works_on_period(start_date=None, end_date=None):
         raise err
     return work
 
+
 # w = get_work_from_id(2)
 # print(w)
 
 # res = get_tg_id_from_work_id(2)
 # print(res)
+
+
+# get_works_on_period(start_date=datetime(2023, 3, 22, 18))
+# get_works_on_period()

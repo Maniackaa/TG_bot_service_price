@@ -70,7 +70,8 @@ async def process_button_press2(callback: CallbackQuery, state: FSMContext):
     print(work_id)
     print('Переход в состояние change_price')
     await state.set_state(FSMAdminMode.change_price)
-    await state.update_data(work_id=work_id)
+    await state.update_data(work_id=work_id,
+                            message_id=callback.message.message_id)
     print(state)
     await callback.message.reply(f'Введите оплату за работу № {work_id}')
 
@@ -85,8 +86,12 @@ async def update_price(message: Message, state: FSMContext, bot: Bot):
     work_id = data['work_id']
     price = message.text
     if price.isdigit():
+        message_id = data['message_id']
         price = int(price)
+        print('msg_id', message_id)
         worker_tg_id, work = db_update_price(work_id, price)
+        # Удалить сообщение
+        await bot.delete_message(chat_id=message.chat.id, message_id=message_id)
         await state.clear()
         await message.answer(f'Стоимость обновлена\n\n{work}')
         work_user_tg_id = get_tg_id_from_work_id(work_id)

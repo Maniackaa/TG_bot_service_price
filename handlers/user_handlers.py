@@ -38,7 +38,8 @@ class FSMWorkAnket(StatesGroup):
 
 
 @router.message(Command(commands=["start"]))
-async def process_start_command(message: Message):
+async def process_start_command(message: Message, state: FSMContext):
+    state.clear()
     user = message.from_user
     create_user(user)
     print('admin - ', is_admin(message.from_user.username))
@@ -52,8 +53,9 @@ async def process_start_command(message: Message):
 
 # Сброс состояния
 @router.message(Command(commands=["Отмена"]))
-async def process_cancel_command(message: Message):
+async def process_cancel_command(message: Message, state: FSMContext):
     print('Юзеровская отмена')
+    state.clear()
     await message.answer('Сброс состояния',
                          reply_markup=admin_start_kb)
 
@@ -97,10 +99,9 @@ async def process_work(message: Message, state: FSMContext):
     input_text = message.text
     if len(input_text) > 5:
         await state.update_data(work_name=message.text)
-        await message.answer(f'Описание работы:\n {message.text}\n'
+        await message.answer(f'Описание работы:\n{message.text}\n'
                              f'\nВсё верно?":\n',
                              reply_markup=q_kb)
-
         await state.set_state(FSMWorkAnket.add_work_again)
     else:
         await message.answer('Не похоже на название работы')
@@ -121,18 +122,32 @@ async def process_q(callback: CallbackQuery, state: FSMContext, bot: Bot):
         data = await state.get_data()
         auto = data['auto']
         work_name = data['work_name']
-        await state.set_state(default_state)
         work = add_work_to_base(tg_id, auto, work_name)
         if work:
             await callback.message.answer(f'Успешно сохранено\n\n{work}',
                                           reply_markup=start_kb)
+
+            # Отправка работы админу:
+            try:
+                await bot.send_message(
+                    chat_id=get_admin_id_from_username(config.tg_bot.admin),
+                    text=work,
+                    reply_markup=get_cost_kb(2))
+                await callback.message.answer(
+                    'Ваша работа отправлена на оценку.',
+                    reply_markup=start_kb)
+            except Exception as err:
+                print('Произошла ошибка при отправке работы.'
+                      ' Сообщите администратору')
+                await callback.message.answer(
+                    f'Произошла ошибка при отправке работы.'
+                    f' Сообщите администратору',
+                    reply_markup=start_kb)
         else:
-            'Произошла ошибка при сохранении работы'
-        # Отправка работы админу:
-        await bot.send_message(
-            chat_id=get_admin_id_from_username(config.tg_bot.admin),
-            text=work,
-            reply_markup=get_cost_kb(2))
+            await callback.message.answer(
+                'Произошла ошибка при сохранении работы',
+                reply_markup=start_kb)
+            print('Произошла ошибка при сохранении работы')
 
 
 # Последний фильтр

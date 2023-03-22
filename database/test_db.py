@@ -84,4 +84,5 @@ def get_works_on_period(start_date=None, end_date=None):
 
     return work
 
+
 get_works_on_period()

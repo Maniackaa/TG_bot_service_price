@@ -10,7 +10,8 @@ from config_data.config import config
 from database.read_db import get_null_price_work_ids, get_work_from_id, \
     get_tg_id_from_work_id, get_works_on_period
 from database.write_db import db_update_price
-from keyboards.keyboards import get_cost_kb, admin_start_kb
+from keyboards.keyboards import get_cost_kb, admin_start_kb, \
+    user_price_confirm_kb
 
 
 class IsAdmin(BaseFilter):
@@ -98,9 +99,13 @@ async def update_price(message: Message, state: FSMContext, bot: Bot):
                                  message_id=message_id)
         await state.clear()
         await message.answer(f'Стоимость обновлена\n\n{work}')
+        # Отправка сообщения юзеру
         work_user_tg_id = get_tg_id_from_work_id(work_id)
-        await bot.send_message(text=f'Ваша работа оценена:\n\n{work}',
+        await bot.send_message(text='Ваша работа оценена:',
                                chat_id=work_user_tg_id)
+        await bot.send_message(text=f'{work}',
+                               chat_id=work_user_tg_id,
+                               reply_markup=user_price_confirm_kb)
     else:
         await message.answer(
             f'Вам необходимо ввести число для работы № {work_id}')
@@ -120,7 +125,7 @@ async def process_show_work_command(message: Message):
 
 # Работы_за_этот_месяц
 @admin_router.message(Command(commands=["Работы_за_этот_месяц"]))
-async def process_show_work_command(message: Message):
+async def process_show_month_work_command(message: Message):
     date_now = datetime.datetime.now()
     year = date_now.year
     month = date_now.month
@@ -134,9 +139,10 @@ async def process_show_work_command(message: Message):
     else:
         await message.answer(text)
 
+
 # Работы_за_прошлый_месяц
 @admin_router.message(Command(commands=["Работы_за_прошлый_месяц"]))
-async def process_show_work_command(message: Message):
+async def process_show_last_month_work_command(message: Message):
     date_now = datetime.datetime.now()
     year = date_now.year
     month = date_now.month

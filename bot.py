@@ -10,6 +10,8 @@ from handlers import user_handlers, admin_handlers
 logger = logging.getLogger(__name__)
 
 locale.setlocale(locale.LC_ALL, ('ru_RU', 'UTF-8'))
+
+
 async def main():
     # Конфигурируем логирование
     logging.basicConfig(

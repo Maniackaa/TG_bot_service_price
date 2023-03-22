@@ -4,7 +4,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State, default_state
 from aiogram.types import CallbackQuery, Message
 
-from database.read_db import get_works, get_admin_id_from_username
+from database.read_db import get_works, get_admin_id_from_username, \
+    get_work_from_id
 from database.write_db import add_work_to_base
 from keyboards.keyboards import q_kb, start_kb, get_cost_kb, admin_start_kb
 from services.services import create_user
@@ -35,11 +36,12 @@ class FSMWorkAnket(StatesGroup):
     get_auto = State()
     get_work = State()
     add_work_again = State()
+    appeal = State()
 
 
 @router.message(Command(commands=["start"]))
 async def process_start_command(message: Message, state: FSMContext):
-    state.clear()
+    await state.clear()
     user = message.from_user
     create_user(user)
     print('admin - ', is_admin(message.from_user.username))
@@ -55,7 +57,7 @@ async def process_start_command(message: Message, state: FSMContext):
 @router.message(Command(commands=["Отмена"]))
 async def process_cancel_command(message: Message, state: FSMContext):
     print('Юзеровская отмена')
-    state.clear()
+    await state.clear()
     await message.answer('Сброс состояния',
                          reply_markup=admin_start_kb)
 
@@ -148,6 +150,65 @@ async def process_q(callback: CallbackQuery, state: FSMContext, bot: Bot):
                 'Произошла ошибка при сохранении работы',
                 reply_markup=start_kb)
             print('Произошла ошибка при сохранении работы')
+
+
+# Действие на нажатие кнопки Подтвердить
+@router.callback_query(Text(startswith='user_price_confirm'))
+async def user_price_confirm(callback: CallbackQuery):
+    print('callback', callback.data)
+    print('Удаляю')
+    await callback.message.delete()
+
+
+# Действие на нажатие кнопки Обжаловать
+@router.callback_query(Text(startswith='user_price_appeal'))
+async def user_price_appeal(callback: CallbackQuery,
+                            state: FSMContext, bot: Bot):
+    print('callback', callback.data)
+    await state.set_state(FSMWorkAnket.appeal)
+    work_id = callback.message.text.split()[0]
+    await state.update_data(work_id=work_id)
+    await state.update_data(message_id=callback.message.message_id)
+    await callback.message.answer('Добавьте комментарий к обжалованию')
+
+
+# Добавление комментария при обжаловании
+@router.message(StateFilter(FSMWorkAnket.appeal))
+async def appeal_comment(message: Message, state: FSMContext, bot: Bot):
+    comment = message.text
+    if len(comment) < 5:
+        await message.answer('Комментарий не может быть пустым')
+    else:
+        # Повторная отправка на переоценку
+        try:
+            data = await state.get_data()
+            work_id = data.get('work_id')
+            work = get_work_from_id(work_id)
+            print('ОТправляем работу на переоценку\n', work)
+            await bot.send_message(
+                chat_id=get_admin_id_from_username(config.tg_bot.admin),
+                text=(f'Работа прислана на переоценку со'
+                      f' следующим комментарием:\n'
+                      f'{comment}'))
+            await bot.send_message(
+                chat_id=get_admin_id_from_username(config.tg_bot.admin),
+                text=work,
+                reply_markup=get_cost_kb(2))
+            await message.answer(
+                'Ваша работа отправлена на переценку.',
+                reply_markup=start_kb)
+            # Скроем сообщение, которое обжаловали
+            msg_to_del = data.get('message_id')
+            print('Удаляем сообщение', msg_to_del)
+            await bot.delete_message(chat_id=message.from_user.id,
+                                     message_id=msg_to_del)
+        except Exception as err:
+            print('Произошла ошибка при отправке работы.'
+                  ' Сообщите администратору', err)
+            await message.answer(
+                'Произошла ошибка при отправке работы.'
+                ' Сообщите администратору',
+                reply_markup=start_kb)
 
 
 # Последний фильтр

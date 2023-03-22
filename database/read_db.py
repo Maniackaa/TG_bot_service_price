@@ -1,5 +1,5 @@
 from collections import Counter
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from database.db import engine, User, Work
 from sqlalchemy.orm import Session
@@ -97,21 +97,23 @@ def get_report(works: list[Work]):
     print(users)
     report = '\n<b>Сводный итог:</b>\n\n'
     for user in users:
-        report += (f'{user}\n'
-                   f'Всего работ: {num_counter.get(user)}\n'
-                   f'Общая сумма: {price_counter.get(user)}\n'
+        report += (f'<b>{user}</b> ({num_counter.get(user)})\n')
+        report += (f'Общая сумма: {price_counter.get(user)}\n'
                    f'Работ без оценки: {uncost_counter.get(user) or 0}\n\n')
-    report += f'Итоговая сумма: {total_counter.get("total_sum")}'
+    report += f'Итоговая сумма: {total_counter.get("total_sum"):n}'
     return report
 
 
-
-def get_works_on_period(start_date=datetime(2023, 1, 1), end_date=datetime.now()):
+def get_works_on_period(start_date=datetime(2023, 1, 1),
+                        end_date=datetime.now()):
     """Получение всех работ"""
     try:
         with Session(engine) as session:
-            works = session.query(Work).order_by(Work.id).filter(Work.datetime <= end_date, Work.datetime > start_date).all()
-            all_work = f'<b>Все работы за\n{start_date.strftime("%d %B %Y")} - {end_date.strftime("%d %B %Y")}:</b>\n\n'
+            works = session.query(Work).order_by(Work.id).filter(
+                Work.datetime <= end_date, Work.datetime > start_date).all()
+            all_work = (f'<b>Все работы за\n'
+                        f'{start_date.strftime("%d %B %Y")} - '
+                        f'{end_date.strftime("%d %B %Y")}:</b>\n\n')
             sum_price = 0
             for work in works:
                 all_work += (

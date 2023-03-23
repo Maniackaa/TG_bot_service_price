@@ -12,12 +12,18 @@ def check_user(id):
 
 
 def create_user(user):
-    """Добавление пользователя в базу"""
+    """Добавление пользователя в базу если его нет"""
     try:
+        print('Берем данные с пользователя')
+        print(user)
         tg_id = user.id
+        print('tg_id', tg_id)
         username = user.username
+        print('username', username)
         first_name = user.first_name
+        print('first_name', first_name)
         last_name = user.last_name
+        print('last_name', last_name)
         if check_user(tg_id):
             print('Пользователь есть в базе')
             return

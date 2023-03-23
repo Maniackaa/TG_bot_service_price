@@ -128,7 +128,7 @@ def get_works_on_period(start_date=datetime(2023, 1, 1),
                     sum_price += work.price
             all_work += get_report(works)
             # print(all_work)
-            print('Всего', len(works))
+            # print('Всего', len(works))
 
             return all_work
     except Exception as err:

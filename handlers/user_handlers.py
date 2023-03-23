@@ -220,6 +220,7 @@ async def appeal_comment(message: Message, state: FSMContext, bot: Bot):
             print('Удаляем сообщение', msg_to_del)
             await bot.delete_message(chat_id=message.from_user.id,
                                      message_id=msg_to_del)
+            await state.clear()
         except Exception as err:
             print('Произошла ошибка при отправке работы.'
                   ' Сообщите администратору', err)

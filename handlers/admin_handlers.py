@@ -34,9 +34,12 @@ class FSMAdminMode(StatesGroup):
     change_price = State()
 
 
+# ***** Админские хэндлеры *****
+
 # Сброс состояния
 @admin_router.message(Command(commands=["Отмена"]))
 async def process_cancel_command(message: Message):
+    """Действие на команду /Отмена"""
     print('Админская отмена')
     await message.answer('Сброс состояния',
                          reply_markup=admin_start_kb)
@@ -45,6 +48,7 @@ async def process_cancel_command(message: Message):
 # Прислать пустые работы
 @admin_router.message(Command(commands=["Прислать_пустые"]))
 async def process_start_command_admin(message: Message):
+    """Действие на команду /Прислать_пустые"""
     null_price_work = get_null_price_work_ids()
     if null_price_work:
         for work_id in null_price_work:
@@ -57,6 +61,7 @@ async def process_start_command_admin(message: Message):
 # Нажатие кнопки Скрыть
 @admin_router.callback_query(Text(text=['close']))
 async def process_button_press1(callback: CallbackQuery):
+    """Удаление сообщения при нажатии на кнопку Скрыть"""
     print(f'Нажата {callback.message.message_id}')
     print('callback', callback.data)
     if callback.data == 'close':
@@ -67,6 +72,7 @@ async def process_button_press1(callback: CallbackQuery):
 # Нажатие кнопки 'Указать стоимость'
 @admin_router.callback_query(Text(text=['price']))
 async def process_button_press2(callback: CallbackQuery, state: FSMContext):
+    """Действие при нажатии на кнопку Скрыть"""
     print("Мессадж:", callback.message)
     print(f'Нажата {callback.message.message_id}')
     print('callback', callback.data)
@@ -83,6 +89,9 @@ async def process_button_press2(callback: CallbackQuery, state: FSMContext):
 # Внести цену
 @admin_router.message(StateFilter(FSMAdminMode.change_price))
 async def update_price(message: Message, state: FSMContext, bot: Bot):
+    """Действие после нажатия на кнопку Скрыть
+    Ввод цены"""
+
     print('Внести цену')
     print(state)
     print(message)
@@ -114,6 +123,7 @@ async def update_price(message: Message, state: FSMContext, bot: Bot):
 # Показать все работы
 @admin_router.message(Command(commands=["Все_работы"]))
 async def process_show_work_command(message: Message):
+    """Действие на команду /Все_работы"""
     text = get_works_on_period()
     print(len(text))
     if len(text) > 4096:
@@ -126,6 +136,7 @@ async def process_show_work_command(message: Message):
 # Работы_за_этот_месяц
 @admin_router.message(Command(commands=["Работы_за_этот_месяц"]))
 async def process_show_month_work_command(message: Message):
+    """Действие на команду /Работы_за_этот_месяц"""
     date_now = datetime.datetime.now()
     year = date_now.year
     month = date_now.month
@@ -143,6 +154,7 @@ async def process_show_month_work_command(message: Message):
 # Работы_за_прошлый_месяц
 @admin_router.message(Command(commands=["Работы_за_прошлый_месяц"]))
 async def process_show_last_month_work_command(message: Message):
+    """Действие на команду /Работы_за_прошлый_месяц"""
     date_now = datetime.datetime.now()
     year = date_now.year
     month = date_now.month

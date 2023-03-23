@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy import select
 
 from database.db import engine, User, Work
@@ -82,7 +84,16 @@ def get_works_on_period(start_date=None, end_date=None):
         work = session.query(Work).order_by(Work.id).first()
         print(work)
 
-    return work
+    return work.datetime
 
 
-get_works_on_period()
+
+res = get_works_on_period()
+print('----------')
+print(res)
+print(type(res))
+d = datetime.datetime.fromisoformat(res)
+print(d, type(d))
+d1 = datetime.datetime.strftime(d, "%d %m %Y %H:%M")
+print(d1, type(d1))
+

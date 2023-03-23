@@ -17,6 +17,7 @@ router: Router = Router()
 
 
 class IsAdmin(BaseFilter):
+    """Фильтр на админа"""
     def __init__(self) -> None:
         self.admin = config.tg_bot.admin
 
@@ -29,6 +30,7 @@ class IsAdmin(BaseFilter):
 
 
 def is_admin(username):
+    """Проверка на админа"""
     return username == config.tg_bot.admin
 
 
@@ -41,6 +43,7 @@ class FSMWorkAnket(StatesGroup):
 
 @router.message(Command(commands=["start"]))
 async def process_start_command(message: Message, state: FSMContext):
+    """Действие на команду /start"""
     await state.clear()
     user = message.from_user
     create_user(user)
@@ -56,6 +59,7 @@ async def process_start_command(message: Message, state: FSMContext):
 # Сброс состояния
 @router.message(Command(commands=["Отмена"]))
 async def process_cancel_command(message: Message, state: FSMContext):
+    """Действие на команду /Отмена"""
     print('Юзеровская отмена')
     await state.clear()
     await message.answer('Сброс состояния',
@@ -65,6 +69,7 @@ async def process_cancel_command(message: Message, state: FSMContext):
 # Показать мои работы
 @router.message(Command(commands=["Мои_работы"]), StateFilter(default_state))
 async def process_show_work_command(message: Message):
+    """Действие на команду /Мои_работы"""
     user = message.from_user.id
     text = get_works(user)
     print(len(text))
@@ -78,6 +83,7 @@ async def process_show_work_command(message: Message):
 # Кнопка Добавление работы
 @router.message(Command(commands=["Добавить_работу_на_оценку"]))
 async def process_add_command(message: Message, state: FSMContext):
+    """Действие на команду /Добавить_работу_на_оценку"""
     await message.answer('Введите Авто')
     await state.set_state(FSMWorkAnket.get_auto)
 
@@ -85,6 +91,8 @@ async def process_add_command(message: Message, state: FSMContext):
 # Добавление авто
 @router.message(StateFilter(FSMWorkAnket.get_auto), ~Text(startswith='/'))
 async def process_auto(message: Message, state: FSMContext):
+    """Режим после Добавить_работу_на_оценку
+    Ввод авто"""
     input_text = message.text
     if len(input_text) > 5:
         await state.update_data(auto=message.text)
@@ -98,6 +106,8 @@ async def process_auto(message: Message, state: FSMContext):
 # Добавление имени работы
 @router.message(StateFilter(FSMWorkAnket.get_work), ~Text(startswith='/'))
 async def process_work(message: Message, state: FSMContext):
+    """Режим после Добавить_работу_на_оценку, Ввод авто
+    Ввод имени работы"""
     input_text = message.text
     if len(input_text) > 5:
         await state.update_data(work_name=message.text)
@@ -112,6 +122,8 @@ async def process_work(message: Message, state: FSMContext):
 # Обработка вопроса продолжить или нет
 @router.callback_query(StateFilter(FSMWorkAnket.add_work_again))
 async def process_q(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """Режим после Добавить_работу_на_оценку, Ввод авто, Ввод имени работы
+    Обработка вопроса Сохранить/отменить"""
     tg_id = callback.from_user.id
     await callback.message.edit_text(text=f'Вы выбрали {callback.data}')
 
@@ -155,15 +167,19 @@ async def process_q(callback: CallbackQuery, state: FSMContext, bot: Bot):
 # Действие на нажатие кнопки Подтвердить
 @router.callback_query(Text(startswith='user_price_confirm'))
 async def user_price_confirm(callback: CallbackQuery):
+    """Действие на нажатие Сохранить"""
     print('callback', callback.data)
     print('Удаляю')
-    await callback.message.delete()
+    await callback.message.edit_text(callback.message.text + ' (подтверждено)', reply_markup=None)
 
+
+# ******* Обжалование работы ********
 
 # Действие на нажатие кнопки Обжаловать
 @router.callback_query(Text(startswith='user_price_appeal'))
 async def user_price_appeal(callback: CallbackQuery,
                             state: FSMContext, bot: Bot):
+    """Действие на нажатие Сохранить"""
     print('callback', callback.data)
     await state.set_state(FSMWorkAnket.appeal)
     work_id = callback.message.text.split()[0]
@@ -175,6 +191,8 @@ async def user_price_appeal(callback: CallbackQuery,
 # Добавление комментария при обжаловании
 @router.message(StateFilter(FSMWorkAnket.appeal))
 async def appeal_comment(message: Message, state: FSMContext, bot: Bot):
+    """Действие после Сохранить
+    Добавление комментария"""
     comment = message.text
     if len(comment) < 5:
         await message.answer('Комментарий не может быть пустым')
@@ -214,5 +232,6 @@ async def appeal_comment(message: Message, state: FSMContext, bot: Bot):
 # Последний фильтр
 @router.message(StateFilter(default_state))
 async def send_echo(message: Message):
+    """Если не один фильтр не сработал"""
     print('Эхо')
     await message.answer(text='Неизвестная команда')

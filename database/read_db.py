@@ -117,6 +117,7 @@ def get_works_on_period(start_date=datetime(2023, 1, 1),
             sum_price = 0
             for work in works:
                 all_work += (
+                    f'Дата: {work.datetime[:16]}\n'
                     f'Авто: {work.auto}\n'
                     f'Работа {work.id}: {work.name}\n'
                     f'Оценка: {work.price}\n\n')

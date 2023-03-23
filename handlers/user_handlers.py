@@ -63,7 +63,7 @@ async def process_cancel_command(message: Message, state: FSMContext):
     print('Юзеровская отмена')
     await state.clear()
     await message.answer('Сброс состояния',
-                         reply_markup=admin_start_kb)
+                         reply_markup=start_kb)
 
 
 # Показать мои работы

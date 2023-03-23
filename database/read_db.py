@@ -39,8 +39,9 @@ def get_works(tg_id):
                 all_work = f'Все работы пользователя {user.username}:\n\n'
                 for work in user.works:
                     all_work += (
+                        f'Дата: {work.datetime[:16]}\n'
                         f'Авто: {work.auto}\n'
-                        f'Работа: {work.name}\n'
+                        f'Работа {work.id}: {work.name}\n'
                         f'Оценка: {work.price}\n\n')
                     print(f'Авто: {work.auto}\n'
                           f'Работа: {work.name}\n'
